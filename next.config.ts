@@ -1,7 +1,6 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -24,9 +23,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  watchOptions: {
-    ignored: ['**/src/lib/set-admin-claim.js', '**/serviceAccountKey.json'],
-  },
+  // ❌ REMOVED: watchOptions is not a valid Next.js config option
 };
 
 export default nextConfig;
