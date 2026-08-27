@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   title: 'Vaigai Sparklers - Admin Panel',
   description: 'Admin dashboard for Vaigai Sparklers - India\'s Leading Sparklers Brand',
   icons: {
-    icon: '/1000035181.png',
-    shortcut: '/1000035181.png',
-    apple: '/1000035181.png',
+    icon: [{ url: '/logo.png', type: 'image/png' }],
+    shortcut: '/logo.png',
+    apple: '/logo.png',
   },
 };
 
