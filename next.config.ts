@@ -32,9 +32,15 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // ✅ Ignore sensitive or unnecessary file watching
-  watchOptions: {
-    ignored: ['**/src/lib/set-admin-claim.js', '**/serviceAccountKey.json'],
+  // ✅ Ignore sensitive or unnecessary file watching in development
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: ['**/src/lib/set-admin-claim.js', '**/serviceAccountKey.json'],
+      };
+    }
+    return config;
   },
 };
 
