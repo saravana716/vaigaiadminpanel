@@ -3,11 +3,6 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
-  // ✅ Explicitly enable the App Router
-  experimental: {
-    appDir: true,
-  },
-
   // ✅ Ignore build-time errors for smooth Vercel CI
   typescript: {
     ignoreBuildErrors: true,
