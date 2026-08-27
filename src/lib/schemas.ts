@@ -17,5 +17,6 @@ export const productSchema = z.object({
   description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
   category: z.string().min(1, { message: 'Please select a category.' }),
   images: z.any().optional(),
-  videoUrl: z.any().refine(value => value, { message: 'Please upload a video.' }),
+  videoUrl: z.any().optional(),
+  isTrending: z.boolean().default(false).optional(),
 });

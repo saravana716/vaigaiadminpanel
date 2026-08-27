@@ -31,6 +31,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from "@/components/ui/switch";
 import { productSchema } from '@/lib/schemas';
 import type { Product, Category } from '@/lib/types';
 import { X } from 'lucide-react';
@@ -55,6 +56,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, initialData, categ
       category: initialData?.category || '',
       images: initialData?.images || [],
       videoUrl: initialData?.videoUrl || '',
+      isTrending: initialData?.isTrending || false,
     },
   });
 
@@ -111,6 +113,7 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, initialData, categ
       category: initialData?.category || '',
       images: initialData?.images || [],
       videoUrl: initialData?.videoUrl || '',
+      isTrending: initialData?.isTrending || false,
     });
     setImagePreviews(initialData?.images || []);
     setVideoPreview(initialData?.videoUrl || null);
@@ -235,6 +238,30 @@ export function ProductForm({ isOpen, onOpenChange, onSubmit, initialData, categ
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="isTrending"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Trending Product</FormLabel>
+                    <DialogDescription>
+                      Mark this product as trending.
+                    </DialogDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isSubmitting}
+                      aria-readonly
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <DialogFooter className="sticky bottom-0 bg-background pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting}>

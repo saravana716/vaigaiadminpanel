@@ -1,5 +1,3 @@
-import { Timestamp } from "firebase/firestore";
-
 export type User = {
   name: string;
   email: string;
@@ -11,7 +9,7 @@ export type Category = {
   name: string;
   description: string;
   imageUrl: string;
-  createdAt: Date | Timestamp;
+  createdAt: Date | string;
 };
 
 export type Product = {
@@ -21,5 +19,20 @@ export type Product = {
   category: string;
   images: string[];
   videoUrl: string;
-  createdAt: Date | Timestamp;
+  createdAt: Date | string;
+  isTrending: boolean;
 };
+
+export type ContactSubmission = {
+  id: string;
+  company?: string;
+  email: string;
+  eventDate?: string;
+  inquiryType?: string;
+  message?: string;
+  name: string;
+  phone?: string;
+  subject?: string;
+  timestamp: Date | string;
+};
+

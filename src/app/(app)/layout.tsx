@@ -33,6 +33,8 @@ import {
   Settings,
   Shapes,
   Loader2,
+  TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 import { Logo } from "@/components/icons/logo";
 import { useAuth } from "@/hooks/use-auth";
@@ -41,6 +43,8 @@ const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/categories", icon: Shapes, label: "Categories" },
   { href: "/products", icon: Package, label: "Products" },
+  { href: "/trending-products", icon: TrendingUp, label: "Trending Products" },
+  { href: "/contact-submissions", icon: MessageSquare, label: "Contact Form Submissions" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

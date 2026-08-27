@@ -38,7 +38,7 @@ import { z } from "zod"
 import { productSchema } from "@/lib/schemas"
 import { ProductViewDialog } from "./product-view-dialog"
 
-interface ProductsTableProps {
+interface TrendingProductsTableProps {
   isFormOpen: boolean;
   onFormOpenChange: (isOpen: boolean) => void;
 }
@@ -51,7 +51,7 @@ const getPathFromUrl = (url: string) => {
   return parts.length > 1 ? parts[1] : null;
 };
 
-export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTableProps) {
+export function TrendingProductsTable({ isFormOpen, onFormOpenChange }: TrendingProductsTableProps) {
   const [products, setProducts] = React.useState<Product[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -61,7 +61,7 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
   const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null)
   const { toast } = useToast()
 
-  const fetchProductsAndCategories = React.useCallback(async () => {
+  const fetchTrendingProductsAndCategories = React.useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch Categories
@@ -71,10 +71,11 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
       if (catError) throw catError;
       setCategories(categoriesData as Category[]);
 
-      // Fetch Products
+      // Fetch Trending Products
       const { data: productsData, error: prodError } = await supabase
         .from("products")
         .select("*")
+        .eq("isTrending", true)
         .order("createdAt", { ascending: false });
       if (prodError) throw prodError;
       
@@ -84,10 +85,10 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
       })) as Product[];
       setProducts(parsedProducts);
     } catch (error) {
-      console.error("Error fetching data: ", error);
+      console.error("Error fetching trending data: ", error);
       toast({
-        title: "Error fetching data",
-        description: "Could not load products or categories from the database.",
+        title: "Error fetching trending data",
+        description: "Could not load trending products or categories from the database.",
         variant: "destructive",
       })
     } finally {
@@ -96,8 +97,8 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
   }, [toast]);
 
   React.useEffect(() => {
-    fetchProductsAndCategories();
-  }, [fetchProductsAndCategories]);
+    fetchTrendingProductsAndCategories();
+  }, [fetchTrendingProductsAndCategories]);
   
   const handleView = (product: Product) => {
     setSelectedProduct(product);
@@ -149,7 +150,7 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
           title: "Product Deleted",
           description: `Product "${selectedProduct.name}" has been deleted.`,
         })
-        fetchProductsAndCategories(); // Refresh data
+        fetchTrendingProductsAndCategories(); // Refresh data
       } catch (error) {
          console.error("Error deleting product:", error);
          toast({
@@ -206,7 +207,7 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
             // Edit
             const { error } = await supabase
               .from("products")
-              .update({ ...values, images: imageUrls, videoUrl, isTrending: values.isTrending })
+              .update({ ...values, images: imageUrls, videoUrl })
               .eq('id', selectedProduct.id);
             
             if (error) throw error;
@@ -219,18 +220,18 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
             
             const { error } = await supabase
               .from("products")
-              .insert({ ...values, images: imageUrls, videoUrl, isTrending: values.isTrending });
+              .insert({ ...values, images: imageUrls, videoUrl, isTrending: true });
             
             if (error) throw error;
-            toast({ title: "Product Created", description: `Product "${values.name}" has been created.` });
+            toast({ title: "Trending Product Created", description: `Product "${values.name}" has been created as trending.` });
         }
-        fetchProductsAndCategories(); // Refresh data
+        fetchTrendingProductsAndCategories(); // Refresh data
         onFormOpenChange(false);
         setSelectedProduct(null);
      } catch (error) {
-        console.error("Error saving product:", error);
+        console.error("Error saving trending product:", error);
         toast({
-            title: "Error Saving Product",
+            title: "Error Saving Trending Product",
             description: "An unexpected error occurred.",
             variant: "destructive",
         });
@@ -280,7 +281,7 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
             ) : products.length === 0 ? (
                <TableRow>
                     <TableCell colSpan={5} className="h-24 text-center">
-                        No products found.
+                        No trending products found.
                     </TableCell>
                 </TableRow>
             ) : (
@@ -340,7 +341,7 @@ export function ProductsTable({ isFormOpen, onFormOpenChange }: ProductsTablePro
             isOpen={isFormOpen}
             onOpenChange={onFormOpenChange}
             onSubmit={handleFormSubmit}
-            initialData={selectedProduct}
+            initialData={selectedProduct ? { ...selectedProduct, isTrending: true } : { isTrending: true } as ProductFormData}
             categories={categories}
             isSubmitting={isSubmitting}
         />

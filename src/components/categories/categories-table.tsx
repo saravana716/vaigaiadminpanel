@@ -32,9 +32,7 @@ import type { Category } from "@/lib/types"
 import { MoreHorizontal, Pencil, Trash2, Loader2 } from "lucide-react"
 import { CategoryForm } from "./category-form"
 import { useToast } from "@/hooks/use-toast"
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, Timestamp, serverTimestamp } from "firebase/firestore"
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage"
-import { db, storage } from "@/lib/firebase"
+import { supabase } from "@/lib/supabase"
 import { z } from "zod"
 import { categorySchema } from "@/lib/schemas"
 
@@ -44,6 +42,12 @@ interface CategoriesTableProps {
 }
 
 type CategoryFormData = z.infer<typeof categorySchema>;
+
+const getPathFromUrl = (url: string) => {
+  if (!url) return null;
+  const parts = url.split('/storage/v1/object/public/vaigai/');
+  return parts.length > 1 ? parts[1] : null;
+};
 
 export function CategoriesTable({ isFormOpen, onFormOpenChange }: CategoriesTableProps) {
   const [categories, setCategories] = React.useState<Category[]>([]);
@@ -56,16 +60,19 @@ export function CategoriesTable({ isFormOpen, onFormOpenChange }: CategoriesTabl
   const fetchCategories = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "categories"));
-      const categoriesData = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          createdAt: (data.createdAt as Timestamp).toDate(),
-        } as Category
-      });
-      setCategories(categoriesData.sort((a,b) => (b.createdAt as Date).getTime() - (a.createdAt as Date).getTime()));
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("createdAt", { ascending: false });
+
+      if (error) throw error;
+
+      const categoriesData = (data || []).map(item => ({
+        ...item,
+        createdAt: new Date(item.createdAt),
+      })) as Category[];
+
+      setCategories(categoriesData);
     } catch (error) {
       console.error("Error fetching categories: ", error);
       toast({
@@ -97,11 +104,18 @@ export function CategoriesTable({ isFormOpen, onFormOpenChange }: CategoriesTabl
       try {
         // Delete image from storage
         if (selectedCategory.imageUrl) {
-            const imageRef = ref(storage, selectedCategory.imageUrl);
-            await deleteObject(imageRef);
+            const path = getPathFromUrl(selectedCategory.imageUrl);
+            if (path) {
+                await supabase.storage.from('vaigai').remove([path]);
+            }
         }
-        // Delete doc from firestore
-        await deleteDoc(doc(db, "categories", selectedCategory.id));
+        // Delete doc from database
+        const { error } = await supabase
+          .from("categories")
+          .delete()
+          .eq('id', selectedCategory.id);
+        
+        if (error) throw error;
 
         toast({
           title: "Category Deleted",
@@ -131,25 +145,40 @@ export function CategoriesTable({ isFormOpen, onFormOpenChange }: CategoriesTabl
         if (file) {
             if (existingImageUrl) {
                 try {
-                    const oldImageRef = ref(storage, existingImageUrl);
-                    await deleteObject(oldImageRef);
+                    const path = getPathFromUrl(existingImageUrl);
+                    if (path) {
+                        await supabase.storage.from('vaigai').remove([path]);
+                    }
                 } catch (e) {
                     console.warn("Old image deletion failed, it might not exist", e)
                 }
             }
-            const storageRef = ref(storage, `categories/${Date.now()}_${file.name}`);
-            const uploadResult = await uploadBytes(storageRef, file);
-            imageUrl = await getDownloadURL(uploadResult.ref);
+            const filePath = `categories/${Date.now()}_${file.name}`;
+            const { error: uploadError } = await supabase.storage.from('vaigai').upload(filePath, file);
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage.from('vaigai').getPublicUrl(filePath);
+            imageUrl = publicUrl;
         }
 
         if (selectedCategory) {
             // Edit
-            const categoryRef = doc(db, "categories", selectedCategory.id);
-            await updateDoc(categoryRef, { ...values, imageUrl });
+            const { error } = await supabase
+                .from("categories")
+                .update({ ...values, imageUrl })
+                .eq('id', selectedCategory.id);
+            
+            if (error) throw error;
+
             toast({ title: "Category Updated", description: `Category "${values.name}" has been updated.` });
         } else {
             // Create
-            await addDoc(collection(db, "categories"), { ...values, imageUrl, createdAt: serverTimestamp() });
+            const { error } = await supabase
+                .from("categories")
+                .insert({ ...values, imageUrl });
+
+            if (error) throw error;
+
             toast({ title: "Category Created", description: `Category "${values.name}" has been created.` });
         }
         fetchCategories(); // Refresh data

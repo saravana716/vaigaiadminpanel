@@ -1,29 +1,46 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
+
+  // ✅ Explicitly enable the App Router
+  experimental: {
+    appDir: true,
+  },
+
+  // ✅ Ignore build-time errors for smooth Vercel CI
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
+
+  // ✅ Remote image configuration
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
-        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'qtskyuunvtliqahyhlrl.supabase.co',
         pathname: '/**',
       },
     ],
   },
-  // ❌ REMOVED: watchOptions is not a valid Next.js config option
+
+  // ✅ Ignore sensitive or unnecessary file watching
+  watchOptions: {
+    ignored: ['**/src/lib/set-admin-claim.js', '**/serviceAccountKey.json'],
+  },
 };
 
 export default nextConfig;
